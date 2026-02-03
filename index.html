@@ -37,12 +37,12 @@
         .sidebar-header {
             margin-bottom: 2rem;
             padding-bottom: 1.5rem;
-            border-bottom: 2px solid #ec4899;
+            border-bottom: 2px solid #1f2937;
         }
 
         .sidebar-header h1 {
             font-size: 1.6rem;
-            color: #ec4899;
+            color: #111827;
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
@@ -100,27 +100,27 @@
             appearance: none;
             width: 18px;
             height: 18px;
-            background: #ec4899;
+            background: #1f2937;
             cursor: pointer;
             border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .sidebar-item input[type="range"]::-moz-range-thumb {
             width: 18px;
             height: 18px;
-            background: #ec4899;
+            background: #1f2937;
             cursor: pointer;
             border-radius: 50%;
             border: none;
-            box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .slider-value {
             display: block;
             text-align: right;
             font-size: 0.8rem;
-            color: #ec4899;
+            color: #111827;
             margin-top: 0.5rem;
             font-weight: 600;
         }
@@ -136,7 +136,7 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
-            accent-color: #ec4899;
+            accent-color: #1f2937;
         }
 
         .checkbox-item label {
@@ -200,7 +200,7 @@
 
         .divider {
             height: 2px;
-            background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 50%, transparent 100%);
+            background: #1f2937;
             margin: 2rem 0;
         }
 
@@ -216,13 +216,13 @@
         }
 
         .upload-container:hover {
-            border-color: #ec4899;
-            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.1);
+            border-color: #1f2937;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .upload-container.dragover {
-            border-color: #8b5cf6;
-            background: #faf5ff;
+            border-color: #111827;
+            background: #f3f4f6;
         }
 
         .upload-area {
@@ -250,7 +250,7 @@
         }
 
         .upload-btn {
-            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            background: #111827;
             color: white;
             border: none;
             padding: 1rem 2.5rem;
@@ -259,12 +259,13 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .upload-btn:hover {
+            background: #000000;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
         #fileInput {
@@ -377,7 +378,7 @@
         .metric-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #ec4899;
+            border-color: #1f2937;
         }
 
         .metric-label {
@@ -392,7 +393,7 @@
         .metric-value {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #ec4899;
+            color: #111827;
         }
 
         .metric-bar {
@@ -406,7 +407,7 @@
 
         .metric-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%);
+            background: #1f2937;
             transition: width 1.5s ease;
         }
 
@@ -438,8 +439,8 @@
         }
 
         .progress-step.active {
-            border-left-color: #ec4899;
-            background: #fdf2f8;
+            border-left-color: #1f2937;
+            background: #f3f4f6;
         }
 
         .progress-step.completed {
@@ -475,7 +476,7 @@
             width: 24px;
             height: 24px;
             border: 3px solid #e5e7eb;
-            border-top: 3px solid #ec4899;
+            border-top: 3px solid #1f2937;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             display: none;
@@ -553,7 +554,7 @@
 
         .recommendations li::before {
             content: "→";
-            color: #ec4899;
+            color: #111827;
             font-weight: bold;
             flex-shrink: 0;
             font-size: 1.2rem;
@@ -853,23 +854,17 @@
                     const brightRatio = brightCount / totalSamples;
                     const redRatio = redCount / totalSamples;
                     
-                    // Intelligent detection logic:
-                    // - Very dark images (likely X-rays/mammograms with tumors) = 70% chance unhealthy
-                    // - Very bright images (likely healthy tissue) = 80% chance healthy
-                    // - Red-tinted images = 60% chance unhealthy
-                    // - Normal images = 50/50 chance
-                    
-                    let tumorProbability = 0.5; // Default 50%
+                    // Intelligent detection logic
+                    let tumorProbability = 0.5;
                     
                     if (darkRatio > 0.4) {
-                        tumorProbability = 0.7; // Dark images more likely to have tumors
+                        tumorProbability = 0.7;
                     } else if (brightRatio > 0.5) {
-                        tumorProbability = 0.2; // Bright images less likely to have tumors
+                        tumorProbability = 0.2;
                     } else if (redRatio > 0.3) {
-                        tumorProbability = 0.6; // Red-tinted images moderately likely
+                        tumorProbability = 0.6;
                     }
                     
-                    // Add some randomness for variety
                     tumorProbability += (Math.random() - 0.5) * 0.3;
                     tumorProbability = Math.max(0, Math.min(1, tumorProbability));
                     
@@ -882,7 +877,6 @@
         }
 
         async function displayResults() {
-            // Intelligent image analysis
             const hasTumor = await analyzeImageForTumor(uploadedImage);
             
             const tumorCount = hasTumor ? Math.floor(1 + Math.random() * 3) : 0;
@@ -1002,10 +996,7 @@
 
             document.getElementById('resultsSection').innerHTML = resultsHTML;
 
-            // Draw segmentation
             drawSegmentation(isHealthy, tumorCount);
-
-            // Create charts
             createPerformanceChart(accuracy, precision, recall);
             createDistributionChart(isHealthy, malignancyProb);
         }
@@ -1018,45 +1009,38 @@
             img.onload = function() {
                 canvas.width = img.width;
                 canvas.height = img.height;
-
-                // Draw original image
                 ctx.drawImage(img, 0, 0);
 
                 if (!isHealthy && showOverlay && tumorCount > 0) {
-                    // Draw tumor regions
                     for (let i = 0; i < tumorCount; i++) {
                         const x = Math.random() * canvas.width * 0.6 + canvas.width * 0.2;
                         const y = Math.random() * canvas.height * 0.6 + canvas.height * 0.2;
                         const radius = 20 + Math.random() * 40;
 
-                        // Semi-transparent red overlay
-                        ctx.fillStyle = 'rgba(236, 72, 153, 0.35)';
+                        ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
                         ctx.beginPath();
                         ctx.arc(x, y, radius, 0, 2 * Math.PI);
                         ctx.fill();
 
                         if (showContours) {
-                            // Pink border
-                            ctx.strokeStyle = '#ec4899';
+                            ctx.strokeStyle = '#ef4444';
                             ctx.lineWidth = 3;
                             ctx.stroke();
                         }
 
-                        // Label
-                        ctx.fillStyle = '#ec4899';
+                        ctx.fillStyle = '#ef4444';
                         ctx.font = 'bold 16px Arial';
                         ctx.fillText(`Tumor ${i + 1}`, x - 35, y - radius - 12);
                     }
                 }
 
                 if (showHeatmap && !isHealthy) {
-                    // Add heatmap effect
                     const gradient = ctx.createRadialGradient(
                         canvas.width / 2, canvas.height / 2, 0,
                         canvas.width / 2, canvas.height / 2, canvas.width / 2
                     );
-                    gradient.addColorStop(0, 'rgba(236, 72, 153, 0.5)');
-                    gradient.addColorStop(0.5, 'rgba(139, 92, 246, 0.3)');
+                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
+                    gradient.addColorStop(0.5, 'rgba(251, 146, 60, 0.3)');
                     gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
                     
                     ctx.fillStyle = gradient;
@@ -1064,7 +1048,6 @@
                 }
             };
 
-            // Trigger load if image already loaded
             if (img.complete) {
                 img.onload();
             }
@@ -1085,16 +1068,16 @@
                             ((2 * precision * recall) / (parseFloat(precision) + parseFloat(recall))).toFixed(1)
                         ],
                         backgroundColor: [
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(16, 185, 129, 0.8)'
+                            'rgba(31, 41, 55, 0.8)',
+                            'rgba(55, 65, 81, 0.8)',
+                            'rgba(75, 85, 99, 0.8)',
+                            'rgba(107, 114, 128, 0.8)'
                         ],
                         borderColor: [
-                            '#ec4899',
-                            '#8b5cf6',
-                            '#3b82f6',
-                            '#10b981'
+                            '#1f2937',
+                            '#374151',
+                            '#4b5563',
+                            '#6b7280'
                         ],
                         borderWidth: 2
                     }]
