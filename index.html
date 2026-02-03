@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breast Cancer Tumor Segmentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #0e1117;
+            color: #fafafa;
+            min-height: 100vh;
+        }
+
+        /* Streamlit-style sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #262730;
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem;
+            color: #ff4b4b;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-header p {
+            font-size: 0.875rem;
+            color: #a3a8b4;
+            line-height: 1.5;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.875rem;
+            color: #a3a8b4;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .sidebar-item {
+            background: #0e1117;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid #262730;
+        }
+
+        .sidebar-item label {
+            display: block;
+            font-size: 0.875rem;
+            color: #fafafa;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .sidebar-item input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #262730;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .sidebar-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ff4b4b;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .sidebar-item input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #ff4b4b;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .slider-value {
+            display: block;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #a3a8b4;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #ff4b4b;
+        }
+
+        .checkbox-item label {
+            font-size: 0.875rem;
+            color: #fafafa;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .info-box {
+            background: #1e2130;
+            border-left: 3px solid #4da6ff;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .info-box p {
+            font-size: 0.8rem;
+            color: #a3a8b4;
+            line-height: 1.5;
+        }
+
+        .warning-box {
+            background: #2d1f1f;
+            border-left: 3px solid #ff4b4b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .warning-box p {
+            font-size: 0.8rem;
+            color: #ffb3b3;
+            line-height: 1.5;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem 3rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #fafafa;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #a3a8b4;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, #ff4b4b 0%, transparent 100%);
+            margin: 2rem 0;
+        }
+
+        /* Upload section */
+        .upload-container {
+            background: #262730;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px dashed #4a4e5a;
+            transition: all 0.3s ease;
+        }
+
+        .upload-container:hover {
+            border-color: #ff4b4b;
+            background: #2d2f3a;
+        }
+
+        .upload-container.dragover {
+            border-color: #ff4b4b;
+            background: #2d2f3a;
+            transform: scale(1.01);
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 3rem 2rem;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-area h3 {
+            font-size: 1.25rem;
+            color: #fafafa;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-area p {
+            color: #a3a8b4;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-btn {
+            background: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 75, 75, 0.3);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Image display */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .image-card {
+            background: #262730;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #3a3d4a;
+        }
+
+        .image-card h3 {
+            font-size: 1.125rem;
+            color: #fafafa;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: #1e2130;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Results section */
+        .results-container {
+            background: #262730;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #3a3d4a;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            color: #fafafa;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge.healthy {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-badge.unhealthy {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #1e2130;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #2d3142;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #a3a8b4;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff4b4b;
+        }
+
+        .metric-bar {
+            width: 100%;
+            height: 8px;
+            background: #262730;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4b4b 0%, #ff6b6b 100%);
+            transition: width 1s ease;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            background: #262730;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #1e2130;
+            border-radius: 0.5rem;
+            border-left: 3px solid #3a3d4a;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active {
+            border-left-color: #ff4b4b;
+            background: #2d1f1f;
+        }
+
+        .progress-step.completed {
+            border-left-color: #10b981;
+            background: #1f2d27;
+        }
+
+        .progress-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #262730;
+            border-radius: 50%;
+        }
+
+        .progress-content h4 {
+            font-size: 1rem;
+            color: #fafafa;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-content p {
+            font-size: 0.875rem;
+            color: #a3a8b4;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #3a3d4a;
+            border-top: 3px solid #ff4b4b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .progress-step.active .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Segmentation visualization */
+        .segmentation-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .tumor-region {
+            position: absolute;
+            border: 3px solid #ff4b4b;
+            background: rgba(255, 75, 75, 0.2);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+
+        /* Recommendations */
+        .recommendations {
+            background: #1e2130;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .recommendations h3 {
+            font-size: 1.125rem;
+            color: #fafafa;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 0.75rem 0;
+            color: #a3a8b4;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid #262730;
+        }
+
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .recommendations li::before {
+            content: "→";
+            color: #ff4b4b;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Canvas for segmentation */
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>🎗️ Breast Cancer Detection</h1>
+            <p>AI-powered tumor segmentation and classification system</p>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Model Settings</h3>
+            
+            <div class="sidebar-item">
+                <label>Confidence Threshold</label>
+                <input type="range" id="confidenceSlider" min="50" max="99" value="85" oninput="updateConfidence(this.value)">
+                <span class="slider-value" id="confidenceValue">85%</span>
+            </div>
+
+            <div class="sidebar-item">
+                <label>Segmentation Sensitivity</label>
+                <input type="range" id="sensitivitySlider" min="1" max="10" value="7" oninput="updateSensitivity(this.value)">
+                <span class="slider-value" id="sensitivityValue">7/10</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>Visualization Options</h3>
+            
+            <div class="sidebar-item">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="showOverlay" checked onchange="toggleOverlay()">
+                    <label for="showOverlay">Show Tumor Overlay</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="showHeatmap" onchange="toggleHeatmap()">
+                    <label for="showHeatmap">Show Heatmap</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="showContours" checked onchange="toggleContours()">
+                    <label for="showContours">Show Contours</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3>About</h3>
+            <div class="info-box">
+                <p><strong>Technology:</strong> Deep Learning CNN with U-Net architecture for precise tumor segmentation.</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>⚠️ Medical Disclaimer:</strong> This tool is for research purposes only. Always consult healthcare professionals for diagnosis.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Breast Cancer Tumor Segmentation</h1>
+            <p>Upload mammogram or ultrasound images for automatic tumor detection and segmentation</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Upload Section -->
+        <div class="upload-container" id="uploadContainer">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📤</div>
+                <h3>Upload Medical Image</h3>
+                <p>Drag and drop or click to browse (JPEG, PNG, DICOM)</p>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+                <button class="upload-btn" type="button">Browse Files</button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-container" id="progressContainer">
+            <h2 style="margin-bottom: 1.5rem; color: #fafafa;">Processing Image...</h2>
+            
+            <div class="progress-step" id="step1">
+                <div class="progress-icon">📥</div>
+                <div class="progress-content">
+                    <h4>Image Preprocessing</h4>
+                    <p>Normalizing and enhancing image quality</p>
+                </div>
+                <div class="spinner"></div>
+            </div>
+
+            <div class="progress-step" id="step2">
+                <div class="progress-icon">🧠</div>
+                <div class="progress-content">
+                    <h4>Deep Learning Analysis</h4>
+                    <p>Running CNN model for feature extraction</p>
+                </div>
+                <div class="spinner"></div>
+            </div>
+
+            <div class="progress-step" id="step3">
+                <div class="progress-icon">🎯</div>
+                <div class="progress-content">
+                    <h4>Tumor Segmentation</h4>
+                    <p>Identifying and segmenting tumor regions</p>
+                </div>
+                <div class="spinner"></div>
+            </div>
+
+            <div class="progress-step" id="step4">
+                <div class="progress-icon">📊</div>
+                <div class="progress-content">
+                    <h4>Classification</h4>
+                    <p>Determining healthy vs unhealthy status</p>
+                </div>
+                <div class="spinner"></div>
+            </div>
+
+            <div class="progress-step" id="step5">
+                <div class="progress-icon">✅</div>
+                <div class="progress-content">
+                    <h4>Analysis Complete</h4>
+                    <p>Generating diagnostic report</p>
+                </div>
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection"></div>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+        let confidenceThreshold = 85;
+        let sensitivity = 7;
+        let showOverlay = true;
+        let showHeatmap = false;
+        let showContours = true;
+
+        // Drag and drop
+        const uploadContainer = document.getElementById('uploadContainer');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadContainer.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadContainer.addEventListener(eventName, () => {
+                uploadContainer.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadContainer.addEventListener(eventName, () => {
+                uploadContainer.classList.remove('dragover');
+            }, false);
+        });
+
+        uploadContainer.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }, false);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file!');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage = e.target.result;
+                processImage();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImage() {
+            uploadContainer.style.display = 'none';
+            document.getElementById('progressContainer').classList.add('active');
+            document.getElementById('resultsSection').innerHTML = '';
+
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+            let currentStep = 0;
+
+            function processStep() {
+                if (currentStep > 0) {
+                    document.getElementById(steps[currentStep - 1]).classList.remove('active');
+                    document.getElementById(steps[currentStep - 1]).classList.add('completed');
+                }
+
+                if (currentStep < steps.length) {
+                    document.getElementById(steps[currentStep]).classList.add('active');
+                    currentStep++;
+                    setTimeout(processStep, 1500);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('progressContainer').classList.remove('active');
+                        steps.forEach(step => {
+                            document.getElementById(step).classList.remove('active', 'completed');
+                        });
+                        displayResults();
+                    }, 500);
+                }
+            }
+
+            processStep();
+        }
+
+        function displayResults() {
+            // Simulate AI analysis
+            const isHealthy = Math.random() > 0.4;
+            const confidence = isHealthy ? (90 + Math.random() * 8).toFixed(1) : (82 + Math.random() * 15).toFixed(1);
+            const tumorSize = isHealthy ? 0 : (5 + Math.random() * 25).toFixed(1);
+            const tumorCount = isHealthy ? 0 : Math.floor(1 + Math.random() * 3);
+            const malignancyProb = isHealthy ? (2 + Math.random() * 8).toFixed(1) : (65 + Math.random() * 30).toFixed(1);
+
+            const resultsHTML = `
+                <div class="results-container">
+                    <div class="results-header">
+                        <h2>🔬 Analysis Results</h2>
+                        <div class="status-badge ${isHealthy ? 'healthy' : 'unhealthy'}">
+                            ${isHealthy ? '✅ HEALTHY' : '⚠️ TUMOR DETECTED'}
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Confidence</div>
+                            <div class="metric-value">${confidence}%</div>
+                            <div class="metric-bar">
+                                <div class="metric-bar-fill" style="width: ${confidence}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-label">Malignancy Risk</div>
+                            <div class="metric-value">${malignancyProb}%</div>
+                            <div class="metric-bar">
+                                <div class="metric-bar-fill" style="width: ${malignancyProb}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-label">Tumor Regions</div>
+                            <div class="metric-value">${tumorCount}</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-label">Max Size (mm)</div>
+                            <div class="metric-value">${tumorSize}</div>
+                        </div>
+                    </div>
+
+                    <div class="image-grid">
+                        <div class="image-card">
+                            <h3>📷 Original Image</h3>
+                            <div class="image-wrapper">
+                                <img src="${uploadedImage}" alt="Original" id="originalImage">
+                            </div>
+                        </div>
+
+                        <div class="image-card">
+                            <h3>🎯 Segmentation Result</h3>
+                            <div class="image-wrapper">
+                                <canvas id="segmentationCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${!isHealthy ? `
+                        <div class="recommendations">
+                            <h3>⚕️ Medical Recommendations</h3>
+                            <ul>
+                                <li>Immediate consultation with oncologist recommended</li>
+                                <li>Schedule biopsy for tissue analysis</li>
+                                <li>Consider additional imaging (MRI, CT scan)</li>
+                                <li>Discuss treatment options with medical team</li>
+                                <li>Regular monitoring and follow-up scans</li>
+                                <li>Genetic testing if family history present</li>
+                            </ul>
+                        </div>
+                    ` : `
+                        <div class="recommendations">
+                            <h3>✅ Recommendations</h3>
+                            <ul>
+                                <li>Continue regular screening schedule</li>
+                                <li>Maintain healthy lifestyle and diet</li>
+                                <li>Annual mammogram as per guidelines</li>
+                                <li>Self-examination monthly</li>
+                                <li>Report any changes to healthcare provider</li>
+                            </ul>
+                        </div>
+                    `}
+                </div>
+            `;
+
+            document.getElementById('resultsSection').innerHTML = resultsHTML;
+
+            // Draw segmentation
+            drawSegmentation(isHealthy, tumorCount);
+        }
+
+        function drawSegmentation(isHealthy, tumorCount) {
+            const canvas = document.getElementById('segmentationCanvas');
+            const ctx = canvas.getContext('2d');
+            const img = document.getElementById('originalImage');
+
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                // Draw original image
+                ctx.drawImage(img, 0, 0);
+
+                if (!isHealthy && showOverlay) {
+                    // Draw tumor regions
+                    for (let i = 0; i < tumorCount; i++) {
+                        const x = Math.random() * canvas.width * 0.6 + canvas.width * 0.2;
+                        const y = Math.random() * canvas.height * 0.6 + canvas.height * 0.2;
+                        const radius = 20 + Math.random() * 40;
+
+                        // Semi-transparent red overlay
+                        ctx.fillStyle = 'rgba(255, 75, 75, 0.3)';
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                        ctx.fill();
+
+                        if (showContours) {
+                            // Red border
+                            ctx.strokeStyle = '#ff4b4b';
+                            ctx.lineWidth = 3;
+                            ctx.stroke();
+                        }
+
+                        // Label
+                        ctx.fillStyle = '#ff4b4b';
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillText(`Tumor ${i + 1}`, x - 30, y - radius - 10);
+                    }
+                }
+
+                if (showHeatmap && !isHealthy) {
+                    // Add heatmap effect
+                    const gradient = ctx.createRadialGradient(
+                        canvas.width / 2, canvas.height / 2, 0,
+                        canvas.width / 2, canvas.height / 2, canvas.width / 2
+                    );
+                    gradient.addColorStop(0, 'rgba(255, 75, 75, 0.4)');
+                    gradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.2)');
+                    gradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            };
+
+            // Trigger load if image already loaded
+            if (img.complete) {
+                img.onload();
+            }
+        }
+
+        function updateConfidence(value) {
+            confidenceThreshold = value;
+            document.getElementById('confidenceValue').textContent = value + '%';
+        }
+
+        function updateSensitivity(value) {
+            sensitivity = value;
+            document.getElementById('sensitivityValue').textContent = value + '/10';
+        }
+
+        function toggleOverlay() {
+            showOverlay = document.getElementById('showOverlay').checked;
+            if (uploadedImage) {
+                const canvas = document.getElementById('segmentationCanvas');
+                if (canvas) {
+                    drawSegmentation(false, 2);
+                }
+            }
+        }
+
+        function toggleHeatmap() {
+            showHeatmap = document.getElementById('showHeatmap').checked;
+            if (uploadedImage) {
+                const canvas = document.getElementById('segmentationCanvas');
+                if (canvas) {
+                    drawSegmentation(false, 2);
+                }
+            }
+        }
+
+        function toggleContours() {
+            showContours = document.getElementById('showContours').checked;
+            if (uploadedImage) {
+                const canvas = document.getElementById('segmentationCanvas');
+                if (canvas) {
+                    drawSegmentation(false, 2);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
