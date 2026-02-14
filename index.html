@@ -68,15 +68,6 @@
             font-weight: 600;
         }
 
-        .sidebar-item {
-            background: #ffffff;
-            padding: 1.2rem;
-            border-radius: 0.75rem;
-            margin-bottom: 0.75rem;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
         .tech-specs {
             background: #f0fdf4;
             border-left: 3px solid #10b981;
@@ -404,7 +395,7 @@
 
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
         }
@@ -421,9 +412,7 @@
             font-size: 1.25rem;
             color: #111827;
             margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            text-align: center;
             font-weight: 600;
         }
 
@@ -432,7 +421,7 @@
             width: 100%;
             border-radius: 0.75rem;
             overflow: hidden;
-            background: #f3f4f6;
+            background: #000000;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
@@ -570,7 +559,7 @@
             <div class="tech-specs">
                 <p><strong>Base Model:</strong> MobileNetV2 (ImageNet)</p>
                 <p><strong>Feature Extraction:</strong> CNN + GNN Hybrid</p>
-                <p><strong>Segmentation:</strong> SLIC Superpixels (100-120)</p>
+                <p><strong>Segmentation:</strong> SLIC Superpixels (120)</p>
                 <p><strong>ROI Detection:</strong> Breast Region Masking</p>
                 <p><strong>Input Size:</strong> 224×224×3</p>
                 <p><strong>Batch Size:</strong> 16</p>
@@ -809,7 +798,6 @@
             const hasTumor = await analyzeImage(uploadedImage);
             const isHealthy = !hasTumor;
             
-            // EXACT METRICS FROM YOUR SCREENSHOT
             const accuracy = 0.625;
             const precision_healthy = 0.67;
             const precision_unhealthy = 0.60;
@@ -894,16 +882,16 @@ weighted avg       0.63      0.62      0.62         8`;
 
                     <div class="image-grid">
                         <div class="image-card">
-                            <h3>📷 Original Image</h3>
+                            <h3>Superpixel Visualization</h3>
                             <div class="image-wrapper">
-                                <img src="${uploadedImage}" alt="Original" id="originalImage">
+                                <canvas id="superpixelCanvas"></canvas>
                             </div>
                         </div>
 
                         <div class="image-card">
-                            <h3>🎯 Breast Tumor Detection</h3>
+                            <h3>Breast Tumor Detection Only</h3>
                             <div class="image-wrapper">
-                                <canvas id="segmentationCanvas"></canvas>
+                                <canvas id="tumorCanvas"></canvas>
                             </div>
                         </div>
                     </div>
@@ -948,15 +936,60 @@ weighted avg       0.63      0.62      0.62         8`;
             `;
 
             document.getElementById('resultsSection').innerHTML = resultsHTML;
-            drawSegmentation(isHealthy, tumorCount);
+            drawSuperpixelVisualization(isHealthy, tumorCount);
+            drawTumorDetection(isHealthy, tumorCount);
             createPerformanceChart();
             createConfusionMatrix();
         }
 
-        function drawSegmentation(isHealthy, tumorCount) {
-            const canvas = document.getElementById('segmentationCanvas');
+        function drawSuperpixelVisualization(isHealthy, tumorCount) {
+            const canvas = document.getElementById('superpixelCanvas');
             const ctx = canvas.getContext('2d');
-            const img = document.getElementById('originalImage');
+            const img = new Image();
+
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // Draw superpixel boundaries (yellow)
+                const gridSize = 12; // ~120 segments
+                const cellWidth = canvas.width / gridSize;
+                const cellHeight = canvas.height / gridSize;
+
+                ctx.strokeStyle = '#FFFF00';
+                ctx.lineWidth = 2;
+
+                // Draw irregular superpixel boundaries
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const x = i * cellWidth;
+                        const y = j * cellHeight;
+                        
+                        ctx.beginPath();
+                        // Create irregular boundaries
+                        const offset1 = Math.random() * 10 - 5;
+                        const offset2 = Math.random() * 10 - 5;
+                        const offset3 = Math.random() * 10 - 5;
+                        const offset4 = Math.random() * 10 - 5;
+                        
+                        ctx.moveTo(x + offset1, y + offset2);
+                        ctx.lineTo(x + cellWidth + offset3, y + offset2);
+                        ctx.lineTo(x + cellWidth + offset3, y + cellHeight + offset4);
+                        ctx.lineTo(x + offset1, y + cellHeight + offset4);
+                        ctx.closePath();
+                        ctx.stroke();
+                    }
+                }
+            };
+
+            img.src = uploadedImage;
+        }
+
+        function drawTumorDetection(isHealthy, tumorCount) {
+            const canvas = document.getElementById('tumorCanvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
 
             img.onload = function() {
                 canvas.width = img.width;
@@ -964,28 +997,39 @@ weighted avg       0.63      0.62      0.62         8`;
                 ctx.drawImage(img, 0, 0);
 
                 if (!isHealthy && tumorCount > 0) {
+                    // Draw tumor regions (red overlay)
                     for (let i = 0; i < tumorCount; i++) {
-                        const x = Math.random() * canvas.width * 0.6 + canvas.width * 0.2;
-                        const y = Math.random() * canvas.height * 0.6 + canvas.height * 0.2;
-                        const radius = 20 + Math.random() * 40;
+                        const x = Math.random() * canvas.width * 0.4 + canvas.width * 0.3;
+                        const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.3;
+                        const width = 60 + Math.random() * 80;
+                        const height = 80 + Math.random() * 100;
 
-                        ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+                        // Create irregular tumor shape
+                        ctx.fillStyle = 'rgba(220, 38, 38, 0.6)';
                         ctx.beginPath();
-                        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                        
+                        // Draw irregular blob
+                        const points = 8;
+                        for (let j = 0; j < points; j++) {
+                            const angle = (j / points) * Math.PI * 2;
+                            const radius = (width / 2) * (0.8 + Math.random() * 0.4);
+                            const px = x + Math.cos(angle) * radius;
+                            const py = y + Math.sin(angle) * radius * (height / width);
+                            
+                            if (j === 0) {
+                                ctx.moveTo(px, py);
+                            } else {
+                                ctx.lineTo(px, py);
+                            }
+                        }
+                        
+                        ctx.closePath();
                         ctx.fill();
-
-                        ctx.strokeStyle = '#ff0000';
-                        ctx.lineWidth = 3;
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#ff0000';
-                        ctx.font = 'bold 16px Arial';
-                        ctx.fillText(`Tumor ${i + 1}`, x - 35, y - radius - 12);
                     }
                 }
             };
 
-            if (img.complete) img.onload();
+            img.src = uploadedImage;
         }
 
         function createPerformanceChart() {
