@@ -950,34 +950,70 @@ weighted avg       0.63      0.62      0.62         8`;
             img.onload = function() {
                 canvas.width = img.width;
                 canvas.height = img.height;
+                
+                // Apply thermal/heat map effect
                 ctx.drawImage(img, 0, 0);
-
-                // Draw superpixel boundaries (yellow)
-                const gridSize = 12; // ~120 segments
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Convert to thermal colors (blue -> green -> yellow)
+                for (let i = 0; i < data.length; i += 4) {
+                    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    
+                    if (brightness < 85) {
+                        // Dark blue
+                        data[i] = 0;
+                        data[i + 1] = 0;
+                        data[i + 2] = brightness * 2;
+                    } else if (brightness < 170) {
+                        // Green
+                        data[i] = (brightness - 85) * 1.5;
+                        data[i + 1] = brightness * 1.2;
+                        data[i + 2] = (170 - brightness) * 1.5;
+                    } else {
+                        // Yellow/White
+                        data[i] = 255;
+                        data[i + 1] = 255;
+                        data[i + 2] = Math.max(0, 255 - (brightness - 170) * 2);
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                // Draw yellow superpixel boundaries
+                const gridSize = 11;
                 const cellWidth = canvas.width / gridSize;
                 const cellHeight = canvas.height / gridSize;
 
                 ctx.strokeStyle = '#FFFF00';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 3;
 
-                // Draw irregular superpixel boundaries
-                for (let i = 0; i < gridSize; i++) {
-                    for (let j = 0; j < gridSize; j++) {
+                for (let i = 0; i <= gridSize; i++) {
+                    for (let j = 0; j <= gridSize; j++) {
                         const x = i * cellWidth;
                         const y = j * cellHeight;
                         
                         ctx.beginPath();
-                        // Create irregular boundaries
-                        const offset1 = Math.random() * 10 - 5;
-                        const offset2 = Math.random() * 10 - 5;
-                        const offset3 = Math.random() * 10 - 5;
-                        const offset4 = Math.random() * 10 - 5;
+                        const offset1 = (Math.random() - 0.5) * 15;
+                        const offset2 = (Math.random() - 0.5) * 15;
+                        const offset3 = (Math.random() - 0.5) * 15;
+                        const offset4 = (Math.random() - 0.5) * 15;
                         
                         ctx.moveTo(x + offset1, y + offset2);
-                        ctx.lineTo(x + cellWidth + offset3, y + offset2);
-                        ctx.lineTo(x + cellWidth + offset3, y + cellHeight + offset4);
-                        ctx.lineTo(x + offset1, y + cellHeight + offset4);
-                        ctx.closePath();
+                        ctx.bezierCurveTo(
+                            x + cellWidth/2 + offset3, y + offset2,
+                            x + cellWidth/2 + offset3, y + cellHeight + offset4,
+                            x + cellWidth + offset1, y + cellHeight + offset4
+                        );
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x + offset1, y + offset2);
+                        ctx.bezierCurveTo(
+                            x + offset1, y + cellHeight/2 + offset3,
+                            x + cellWidth + offset1, y + cellHeight/2 + offset3,
+                            x + cellWidth + offset1, y + cellHeight + offset4
+                        );
                         ctx.stroke();
                     }
                 }
@@ -994,25 +1030,48 @@ weighted avg       0.63      0.62      0.62         8`;
             img.onload = function() {
                 canvas.width = img.width;
                 canvas.height = img.height;
+                
+                // Apply thermal/heat map effect
                 ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    
+                    if (brightness < 85) {
+                        data[i] = 0;
+                        data[i + 1] = 0;
+                        data[i + 2] = brightness * 2;
+                    } else if (brightness < 170) {
+                        data[i] = (brightness - 85) * 1.5;
+                        data[i + 1] = brightness * 1.2;
+                        data[i + 2] = (170 - brightness) * 1.5;
+                    } else {
+                        data[i] = 255;
+                        data[i + 1] = 255;
+                        data[i + 2] = Math.max(0, 255 - (brightness - 170) * 2);
+                    }
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
 
                 if (!isHealthy && tumorCount > 0) {
-                    // Draw tumor regions (red overlay)
+                    // Draw red tumor regions
                     for (let i = 0; i < tumorCount; i++) {
-                        const x = Math.random() * canvas.width * 0.4 + canvas.width * 0.3;
-                        const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.3;
-                        const width = 60 + Math.random() * 80;
-                        const height = 80 + Math.random() * 100;
+                        const x = canvas.width * (0.35 + Math.random() * 0.3);
+                        const y = canvas.height * (0.35 + Math.random() * 0.3);
+                        const width = 80 + Math.random() * 100;
+                        const height = 100 + Math.random() * 120;
 
-                        // Create irregular tumor shape
-                        ctx.fillStyle = 'rgba(220, 38, 38, 0.6)';
+                        ctx.fillStyle = 'rgba(180, 30, 30, 0.7)';
                         ctx.beginPath();
                         
-                        // Draw irregular blob
-                        const points = 8;
+                        const points = 12;
                         for (let j = 0; j < points; j++) {
                             const angle = (j / points) * Math.PI * 2;
-                            const radius = (width / 2) * (0.8 + Math.random() * 0.4);
+                            const radiusVar = 0.7 + Math.random() * 0.6;
+                            const radius = (width / 2) * radiusVar;
                             const px = x + Math.cos(angle) * radius;
                             const py = y + Math.sin(angle) * radius * (height / width);
                             
