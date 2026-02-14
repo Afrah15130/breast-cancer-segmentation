@@ -395,7 +395,7 @@
 
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
         }
@@ -422,7 +422,8 @@
             border-radius: 0.75rem;
             overflow: hidden;
             background: #000000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 3px solid #1f2937;
         }
 
         .image-wrapper img, .image-wrapper canvas {
@@ -943,27 +944,31 @@ weighted avg       0.63      0.62      0.62         8`;
         }
 
         function getThermalColor(brightness) {
-            // Smooth thermal gradient: Dark Blue -> Cyan -> Green -> Yellow -> White
-            if (brightness < 51) {
-                // Dark Blue (0, 0, 128) to Blue (0, 0, 255)
-                const ratio = brightness / 51;
-                return [0, 0, Math.floor(128 + ratio * 127)];
-            } else if (brightness < 102) {
-                // Blue (0, 0, 255) to Cyan (0, 255, 255)
-                const ratio = (brightness - 51) / 51;
+            // Enhanced smooth thermal gradient
+            if (brightness < 40) {
+                // Deep Blue
+                const ratio = brightness / 40;
+                return [0, 0, Math.floor(100 + ratio * 155)];
+            } else if (brightness < 85) {
+                // Blue to Cyan
+                const ratio = (brightness - 40) / 45;
                 return [0, Math.floor(ratio * 255), 255];
-            } else if (brightness < 153) {
-                // Cyan (0, 255, 255) to Green (0, 255, 0)
-                const ratio = (brightness - 102) / 51;
+            } else if (brightness < 130) {
+                // Cyan to Green
+                const ratio = (brightness - 85) / 45;
                 return [0, 255, Math.floor(255 - ratio * 255)];
-            } else if (brightness < 204) {
-                // Green (0, 255, 0) to Yellow (255, 255, 0)
-                const ratio = (brightness - 153) / 51;
+            } else if (brightness < 175) {
+                // Green to Yellow
+                const ratio = (brightness - 130) / 45;
                 return [Math.floor(ratio * 255), 255, 0];
+            } else if (brightness < 220) {
+                // Yellow to Orange
+                const ratio = (brightness - 175) / 45;
+                return [255, Math.floor(255 - ratio * 100), 0];
             } else {
-                // Yellow (255, 255, 0) to White (255, 255, 255)
-                const ratio = (brightness - 204) / 51;
-                return [255, 255, Math.floor(ratio * 255)];
+                // Orange to White
+                const ratio = (brightness - 220) / 35;
+                return [255, Math.floor(155 + ratio * 100), Math.floor(ratio * 255)];
             }
         }
 
@@ -991,13 +996,15 @@ weighted avg       0.63      0.62      0.62         8`;
                 
                 ctx.putImageData(imageData, 0, 0);
                 
-                // Draw yellow superpixel boundaries
-                const gridSize = 11;
+                // Draw cleaner yellow superpixel boundaries
+                const gridSize = 10;
                 const cellWidth = canvas.width / gridSize;
                 const cellHeight = canvas.height / gridSize;
 
                 ctx.strokeStyle = '#FFFF00';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 2;
 
                 for (let i = 0; i <= gridSize; i++) {
                     for (let j = 0; j <= gridSize; j++) {
@@ -1005,10 +1012,10 @@ weighted avg       0.63      0.62      0.62         8`;
                         const y = j * cellHeight;
                         
                         ctx.beginPath();
-                        const offset1 = (Math.random() - 0.5) * 15;
-                        const offset2 = (Math.random() - 0.5) * 15;
-                        const offset3 = (Math.random() - 0.5) * 15;
-                        const offset4 = (Math.random() - 0.5) * 15;
+                        const offset1 = (Math.random() - 0.5) * 12;
+                        const offset2 = (Math.random() - 0.5) * 12;
+                        const offset3 = (Math.random() - 0.5) * 12;
+                        const offset4 = (Math.random() - 0.5) * 12;
                         
                         ctx.moveTo(x + offset1, y + offset2);
                         ctx.bezierCurveTo(
@@ -1028,6 +1035,8 @@ weighted avg       0.63      0.62      0.62         8`;
                         ctx.stroke();
                     }
                 }
+                
+                ctx.shadowBlur = 0;
             };
 
             img.src = uploadedImage;
@@ -1058,19 +1067,23 @@ weighted avg       0.63      0.62      0.62         8`;
                 ctx.putImageData(imageData, 0, 0);
 
                 if (!isHealthy && tumorCount > 0) {
-                    // Draw large central red tumor region
+                    // Draw cleaner central red tumor
                     const centerX = canvas.width / 2;
-                    const centerY = canvas.height / 2;
-                    const width = canvas.width * 0.25;
-                    const height = canvas.height * 0.4;
+                    const centerY = canvas.height * 0.45;
+                    const width = canvas.width * 0.22;
+                    const height = canvas.height * 0.35;
 
-                    ctx.fillStyle = 'rgba(180, 30, 50, 0.75)';
+                    // Outer glow
+                    ctx.shadowColor = 'rgba(180, 30, 50, 0.5)';
+                    ctx.shadowBlur = 15;
+
+                    ctx.fillStyle = 'rgba(160, 40, 60, 0.8)';
                     ctx.beginPath();
                     
-                    const points = 16;
+                    const points = 20;
                     for (let j = 0; j < points; j++) {
                         const angle = (j / points) * Math.PI * 2;
-                        const radiusVar = 0.6 + Math.random() * 0.8;
+                        const radiusVar = 0.7 + Math.random() * 0.6;
                         const radius = (width / 2) * radiusVar;
                         const px = centerX + Math.cos(angle) * radius;
                         const py = centerY + Math.sin(angle) * radius * (height / width);
@@ -1085,11 +1098,14 @@ weighted avg       0.63      0.62      0.62         8`;
                     ctx.closePath();
                     ctx.fill();
                     
-                    // Add darker red center
-                    ctx.fillStyle = 'rgba(140, 20, 40, 0.6)';
+                    // Inner darker core
+                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = 'rgba(120, 25, 45, 0.7)';
                     ctx.beginPath();
-                    ctx.ellipse(centerX, centerY, width * 0.3, height * 0.3, 0, 0, Math.PI * 2);
+                    ctx.ellipse(centerX, centerY, width * 0.35, height * 0.35, 0, 0, Math.PI * 2);
                     ctx.fill();
+                    
+                    ctx.shadowBlur = 0;
                 }
             };
 
