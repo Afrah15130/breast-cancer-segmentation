@@ -820,7 +820,7 @@
                 f1: (f1 * 100).toFixed(2)
             };
 
-            const tumorCount = isHealthy ? 0 : Math.floor(1 + Math.random() * 3);
+            const tumorCount = isHealthy ? 0 : 1;
 
             const classificationReport = `
               precision    recall  f1-score   support
@@ -942,6 +942,31 @@ weighted avg       0.63      0.62      0.62         8`;
             createConfusionMatrix();
         }
 
+        function getThermalColor(brightness) {
+            // Smooth thermal gradient: Dark Blue -> Cyan -> Green -> Yellow -> White
+            if (brightness < 51) {
+                // Dark Blue (0, 0, 128) to Blue (0, 0, 255)
+                const ratio = brightness / 51;
+                return [0, 0, Math.floor(128 + ratio * 127)];
+            } else if (brightness < 102) {
+                // Blue (0, 0, 255) to Cyan (0, 255, 255)
+                const ratio = (brightness - 51) / 51;
+                return [0, Math.floor(ratio * 255), 255];
+            } else if (brightness < 153) {
+                // Cyan (0, 255, 255) to Green (0, 255, 0)
+                const ratio = (brightness - 102) / 51;
+                return [0, 255, Math.floor(255 - ratio * 255)];
+            } else if (brightness < 204) {
+                // Green (0, 255, 0) to Yellow (255, 255, 0)
+                const ratio = (brightness - 153) / 51;
+                return [Math.floor(ratio * 255), 255, 0];
+            } else {
+                // Yellow (255, 255, 0) to White (255, 255, 255)
+                const ratio = (brightness - 204) / 51;
+                return [255, 255, Math.floor(ratio * 255)];
+            }
+        }
+
         function drawSuperpixelVisualization(isHealthy, tumorCount) {
             const canvas = document.getElementById('superpixelCanvas');
             const ctx = canvas.getContext('2d');
@@ -951,31 +976,17 @@ weighted avg       0.63      0.62      0.62         8`;
                 canvas.width = img.width;
                 canvas.height = img.height;
                 
-                // Apply thermal/heat map effect
                 ctx.drawImage(img, 0, 0);
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 
-                // Convert to thermal colors (blue -> green -> yellow)
+                // Apply smooth thermal gradient
                 for (let i = 0; i < data.length; i += 4) {
                     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    
-                    if (brightness < 85) {
-                        // Dark blue
-                        data[i] = 0;
-                        data[i + 1] = 0;
-                        data[i + 2] = brightness * 2;
-                    } else if (brightness < 170) {
-                        // Green
-                        data[i] = (brightness - 85) * 1.5;
-                        data[i + 1] = brightness * 1.2;
-                        data[i + 2] = (170 - brightness) * 1.5;
-                    } else {
-                        // Yellow/White
-                        data[i] = 255;
-                        data[i + 1] = 255;
-                        data[i + 2] = Math.max(0, 255 - (brightness - 170) * 2);
-                    }
+                    const [r, g, b] = getThermalColor(brightness);
+                    data[i] = r;
+                    data[i + 1] = g;
+                    data[i + 2] = b;
                 }
                 
                 ctx.putImageData(imageData, 0, 0);
@@ -1031,60 +1042,54 @@ weighted avg       0.63      0.62      0.62         8`;
                 canvas.width = img.width;
                 canvas.height = img.height;
                 
-                // Apply thermal/heat map effect
                 ctx.drawImage(img, 0, 0);
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 
+                // Apply smooth thermal gradient
                 for (let i = 0; i < data.length; i += 4) {
                     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    
-                    if (brightness < 85) {
-                        data[i] = 0;
-                        data[i + 1] = 0;
-                        data[i + 2] = brightness * 2;
-                    } else if (brightness < 170) {
-                        data[i] = (brightness - 85) * 1.5;
-                        data[i + 1] = brightness * 1.2;
-                        data[i + 2] = (170 - brightness) * 1.5;
-                    } else {
-                        data[i] = 255;
-                        data[i + 1] = 255;
-                        data[i + 2] = Math.max(0, 255 - (brightness - 170) * 2);
-                    }
+                    const [r, g, b] = getThermalColor(brightness);
+                    data[i] = r;
+                    data[i + 1] = g;
+                    data[i + 2] = b;
                 }
                 
                 ctx.putImageData(imageData, 0, 0);
 
                 if (!isHealthy && tumorCount > 0) {
-                    // Draw red tumor regions
-                    for (let i = 0; i < tumorCount; i++) {
-                        const x = canvas.width * (0.35 + Math.random() * 0.3);
-                        const y = canvas.height * (0.35 + Math.random() * 0.3);
-                        const width = 80 + Math.random() * 100;
-                        const height = 100 + Math.random() * 120;
+                    // Draw large central red tumor region
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const width = canvas.width * 0.25;
+                    const height = canvas.height * 0.4;
 
-                        ctx.fillStyle = 'rgba(180, 30, 30, 0.7)';
-                        ctx.beginPath();
+                    ctx.fillStyle = 'rgba(180, 30, 50, 0.75)';
+                    ctx.beginPath();
+                    
+                    const points = 16;
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const radiusVar = 0.6 + Math.random() * 0.8;
+                        const radius = (width / 2) * radiusVar;
+                        const px = centerX + Math.cos(angle) * radius;
+                        const py = centerY + Math.sin(angle) * radius * (height / width);
                         
-                        const points = 12;
-                        for (let j = 0; j < points; j++) {
-                            const angle = (j / points) * Math.PI * 2;
-                            const radiusVar = 0.7 + Math.random() * 0.6;
-                            const radius = (width / 2) * radiusVar;
-                            const px = x + Math.cos(angle) * radius;
-                            const py = y + Math.sin(angle) * radius * (height / width);
-                            
-                            if (j === 0) {
-                                ctx.moveTo(px, py);
-                            } else {
-                                ctx.lineTo(px, py);
-                            }
+                        if (j === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            ctx.lineTo(px, py);
                         }
-                        
-                        ctx.closePath();
-                        ctx.fill();
                     }
+                    
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Add darker red center
+                    ctx.fillStyle = 'rgba(140, 20, 40, 0.6)';
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, width * 0.3, height * 0.3, 0, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             };
 
