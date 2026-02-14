@@ -617,6 +617,7 @@
                 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 
+                // Apply thermal gradient
                 for (let i = 0; i < data.length; i += 4) {
                     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
                     const [r, g, b] = getThermalColor(brightness);
@@ -626,32 +627,42 @@
                     data[i + 3] = 255;
                 }
                 
+                // Add thermal noise
                 imageData = addThermalNoise(imageData);
                 ctx.putImageData(imageData, 0, 0);
 
+                // Draw tumor regions with red circles
                 if (!isHealthy && tumorRegions > 0) {
                     for (let t = 0; t < tumorRegions; t++) {
-                        const centerX = canvas.width * (0.3 + Math.random() * 0.4);
-                        const centerY = canvas.height * (0.3 + Math.random() * 0.4);
-                        const radius = 30 + Math.random() * 40;
+                        const centerX = canvas.width * (0.35 + Math.random() * 0.3);
+                        const centerY = canvas.height * (0.35 + Math.random() * 0.3);
+                        const radius = 35 + Math.random() * 45;
 
+                        // Red circle outline
                         ctx.strokeStyle = '#e74c3c';
                         ctx.lineWidth = 3;
-                        ctx.shadowColor = 'rgba(231, 76, 60, 0.5)';
-                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = 'rgba(231, 76, 60, 0.6)';
+                        ctx.shadowBlur = 12;
                         
                         ctx.beginPath();
                         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
                         ctx.stroke();
 
-                        ctx.fillStyle = 'rgba(231, 76, 60, 0.3)';
+                        // Semi-transparent red fill
+                        ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
                         ctx.fill();
 
                         ctx.shadowBlur = 0;
 
+                        // Tumor label
                         ctx.fillStyle = '#e74c3c';
-                        ctx.font = 'bold 12px Arial';
-                        ctx.fillText(`Tumor ${t + 1}`, centerX - 25, centerY - radius - 10);
+                        ctx.font = 'bold 14px Arial';
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                        ctx.shadowBlur = 3;
+                        const label = `Tumor ${t + 1}`;
+                        const textWidth = ctx.measureText(label).width;
+                        ctx.fillText(label, centerX - textWidth/2, centerY - radius - 12);
+                        ctx.shadowBlur = 0;
                     }
                 }
             };
