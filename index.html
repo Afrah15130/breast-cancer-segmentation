@@ -208,6 +208,76 @@
             display: block;
         }
 
+        .graph-section {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .graph-section h3 {
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .graph-caption {
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+        }
+
+        .classification-table {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .classification-table h3 {
+            font-size: 1rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            color: #34495e;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
         .upload-container {
             background: #ffffff;
             border-radius: 1rem;
@@ -402,6 +472,13 @@
             <div class="progress-step" id="step4">
                 <div class="spinner"></div>
                 <div>
+                    <strong>GNN Graph Construction</strong>
+                    <p style="font-size: 0.875rem; color: #7f8c8d;">Building node connections</p>
+                </div>
+            </div>
+            <div class="progress-step" id="step5">
+                <div class="spinner"></div>
+                <div>
                     <strong>Tumor Detection</strong>
                     <p style="font-size: 0.875rem; color: #7f8c8d;">Analyzing regions</p>
                 </div>
@@ -434,7 +511,7 @@
             document.getElementById('progressContainer').classList.add('active');
             document.getElementById('resultsSection').innerHTML = '';
 
-            const steps = ['step1', 'step2', 'step3', 'step4'];
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
             let currentStep = 0;
 
             function processStep() {
@@ -539,11 +616,70 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="graph-section">
+                    <h3>🕸️ Graph Representation of Tumor Regions</h3>
+                    <div class="image-wrapper" style="background: #1a1a1a;">
+                        <canvas id="graphCanvas"></canvas>
+                    </div>
+                    <p class="graph-caption">Fig. 2. Graph Representation of Tumor Regions</p>
+                </div>
+
+                <div class="classification-table">
+                    <h3>📊 Classification Report</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1-Score</th>
+                                <th>Support</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Healthy</strong></td>
+                                <td>0.67</td>
+                                <td>0.50</td>
+                                <td>0.57</td>
+                                <td>4</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Unhealthy</strong></td>
+                                <td>0.60</td>
+                                <td>0.75</td>
+                                <td>0.67</td>
+                                <td>4</td>
+                            </tr>
+                            <tr style="background: #f8f9fa; font-weight: 600;">
+                                <td>Accuracy</td>
+                                <td colspan="3">0.62</td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Macro Avg</strong></td>
+                                <td>0.63</td>
+                                <td>0.62</td>
+                                <td>0.62</td>
+                                <td>8</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Weighted Avg</strong></td>
+                                <td>0.63</td>
+                                <td>0.62</td>
+                                <td>0.62</td>
+                                <td>8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             `;
 
             document.getElementById('resultsSection').innerHTML = resultsHTML;
             drawOriginalImage();
             drawSegmentationResult(isHealthy, tumorRegions);
+            drawGraphRepresentation(isHealthy, tumorRegions);
         }
 
         function getThermalColor(brightness) {
@@ -617,7 +753,6 @@
                 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 
-                // Apply thermal gradient
                 for (let i = 0; i < data.length; i += 4) {
                     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
                     const [r, g, b] = getThermalColor(brightness);
@@ -627,18 +762,15 @@
                     data[i + 3] = 255;
                 }
                 
-                // Add thermal noise
                 imageData = addThermalNoise(imageData);
                 ctx.putImageData(imageData, 0, 0);
 
-                // Draw tumor regions with red circles
                 if (!isHealthy && tumorRegions > 0) {
                     for (let t = 0; t < tumorRegions; t++) {
                         const centerX = canvas.width * (0.35 + Math.random() * 0.3);
                         const centerY = canvas.height * (0.35 + Math.random() * 0.3);
                         const radius = 35 + Math.random() * 45;
 
-                        // Red circle outline
                         ctx.strokeStyle = '#e74c3c';
                         ctx.lineWidth = 3;
                         ctx.shadowColor = 'rgba(231, 76, 60, 0.6)';
@@ -648,13 +780,11 @@
                         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
                         ctx.stroke();
 
-                        // Semi-transparent red fill
                         ctx.fillStyle = 'rgba(231, 76, 60, 0.35)';
                         ctx.fill();
 
                         ctx.shadowBlur = 0;
 
-                        // Tumor label
                         ctx.fillStyle = '#e74c3c';
                         ctx.font = 'bold 14px Arial';
                         ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -665,6 +795,89 @@
                         ctx.shadowBlur = 0;
                     }
                 }
+            };
+
+            img.src = uploadedImage;
+        }
+
+        function drawGraphRepresentation(isHealthy, tumorRegions) {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw grayscale background
+                ctx.drawImage(img, 0, 0);
+                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    data[i] = gray * 0.3;
+                    data[i + 1] = gray * 0.3;
+                    data[i + 2] = gray * 0.3;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+
+                // Draw GNN graph network
+                const nodes = [];
+                const numNodes = 20 + Math.floor(Math.random() * 15);
+                
+                // Create nodes
+                for (let i = 0; i < numNodes; i++) {
+                    nodes.push({
+                        x: canvas.width * (0.2 + Math.random() * 0.6),
+                        y: canvas.height * (0.2 + Math.random() * 0.6),
+                        color: ['#00ff00', '#ffff00', '#ff00ff', '#00ffff', '#ff6600'][Math.floor(Math.random() * 5)]
+                    });
+                }
+
+                // Draw edges
+                ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
+                ctx.lineWidth = 1.5;
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+                        if (dist < 120 && Math.random() < 0.3) {
+                            ctx.beginPath();
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw tumor region (red/orange center)
+                if (!isHealthy) {
+                    const tumorX = canvas.width / 2;
+                    const tumorY = canvas.height / 2;
+                    const tumorRadius = 60;
+
+                    const gradient = ctx.createRadialGradient(tumorX, tumorY, 0, tumorX, tumorY, tumorRadius);
+                    gradient.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(255, 50, 0, 0.6)');
+                    gradient.addColorStop(1, 'rgba(200, 0, 0, 0.3)');
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(tumorX, tumorY, tumorRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw nodes
+                nodes.forEach(node => {
+                    ctx.fillStyle = node.color;
+                    ctx.shadowColor = node.color;
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
             };
 
             img.src = uploadedImage;
