@@ -491,31 +491,34 @@
     <script>
         let uploadedImage = null;
 
-        // EXACT metrics from your table
+        // EXACT metrics from your screenshot
         const METRICS = {
+            accuracy: 0.625,
+            precision: 0.6,
+            recall: 0.75,
+            dice: 0.666666172839872,
             healthy: {
-                precision: 1.00,
+                precision: 0.67,
                 recall: 0.50,
-                f1: 0.67,
-                support: 2
+                f1: 0.57,
+                support: 4
             },
             unhealthy: {
-                precision: 0.86,
-                recall: 1.00,
-                f1: 0.92,
-                support: 6
-            },
-            accuracy: 0.88,
-            macro_avg: {
-                precision: 0.93,
+                precision: 0.60,
                 recall: 0.75,
-                f1: 0.79,
+                f1: 0.67,
+                support: 4
+            },
+            macro_avg: {
+                precision: 0.63,
+                recall: 0.62,
+                f1: 0.62,
                 support: 8
             },
             weighted_avg: {
-                precision: 0.89,
-                recall: 0.88,
-                f1: 0.86,
+                precision: 0.63,
+                recall: 0.62,
+                f1: 0.62,
                 support: 8
             }
         };
@@ -565,15 +568,15 @@
         }
 
         function displayResults() {
-            const isHealthy = Math.random() < 0.25; // 25% chance healthy (2/8 from your data)
-            const tumorRegions = isHealthy ? 0 : Math.floor(1 + Math.random() * 4); // 1-4 tumors
-            const maxSize = isHealthy ? 0 : (3 + Math.random() * 7).toFixed(1); // 3-10mm
+            const isHealthy = Math.random() < 0.5; // 50% chance (4/8 from your data)
+            const tumorRegions = isHealthy ? 0 : Math.floor(1 + Math.random() * 4);
+            const maxSize = isHealthy ? 0 : (3 + Math.random() * 7).toFixed(1);
             
-            // Use EXACT metrics from your table
-            const accuracy = 90.29;
-            const precision = 93.34;
-            const recall = 81.41;
-            const dice = 86.97;
+            // Use EXACT metrics from your screenshot
+            const accuracy = (METRICS.accuracy * 100).toFixed(2);
+            const precision = (METRICS.precision * 100).toFixed(2);
+            const recall = (METRICS.recall * 100).toFixed(2);
+            const dice = (METRICS.dice * 100).toFixed(2);
 
             const resultsHTML = `
                 <div class="header">
