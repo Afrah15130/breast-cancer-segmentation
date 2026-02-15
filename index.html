@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Breast Cancer AI - MobileNetV2 + GNN</title>
-    <!-- Updated: 2024-02-15 - Exact Metrics: 62.5% Accuracy -->
+    <!-- Updated: 2024-02-15 - With Graph Visualization -->
     <style>
         * {
             margin: 0;
@@ -811,36 +811,39 @@
                 canvas.width = img.width;
                 canvas.height = img.height;
                 
+                // Draw dark grayscale background
                 ctx.drawImage(img, 0, 0);
                 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 
                 for (let i = 0; i < data.length; i += 4) {
                     const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    data[i] = gray * 0.3;
-                    data[i + 1] = gray * 0.3;
-                    data[i + 2] = gray * 0.3;
+                    data[i] = gray * 0.25;
+                    data[i + 1] = gray * 0.25;
+                    data[i + 2] = gray * 0.25;
                 }
                 
                 ctx.putImageData(imageData, 0, 0);
 
+                // Create GNN nodes
                 const nodes = [];
-                const numNodes = 20 + Math.floor(Math.random() * 15);
+                const numNodes = 25 + Math.floor(Math.random() * 20);
                 
                 for (let i = 0; i < numNodes; i++) {
                     nodes.push({
-                        x: canvas.width * (0.2 + Math.random() * 0.6),
-                        y: canvas.height * (0.2 + Math.random() * 0.6),
-                        color: ['#00ff00', '#ffff00', '#ff00ff', '#00ffff', '#ff6600'][Math.floor(Math.random() * 5)]
+                        x: canvas.width * (0.15 + Math.random() * 0.7),
+                        y: canvas.height * (0.15 + Math.random() * 0.7),
+                        color: ['#00ff00', '#ffff00', '#ff00ff', '#00ffff', '#ff9900', '#00ff99'][Math.floor(Math.random() * 6)]
                     });
                 }
 
-                ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
-                ctx.lineWidth = 1.5;
+                // Draw edges (connections between nodes)
+                ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+                ctx.lineWidth = 2;
                 for (let i = 0; i < nodes.length; i++) {
                     for (let j = i + 1; j < nodes.length; j++) {
                         const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
-                        if (dist < 120 && Math.random() < 0.3) {
+                        if (dist < 150 && Math.random() < 0.35) {
                             ctx.beginPath();
                             ctx.moveTo(nodes[i].x, nodes[i].y);
                             ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -849,30 +852,50 @@
                     }
                 }
 
-                if (!isHealthy) {
+                // Draw tumor region (red/orange center) if unhealthy
+                if (!isHealthy && tumorRegions > 0) {
                     const tumorX = canvas.width / 2;
                     const tumorY = canvas.height / 2;
-                    const tumorRadius = 60;
+                    const tumorRadius = 70;
 
                     const gradient = ctx.createRadialGradient(tumorX, tumorY, 0, tumorX, tumorY, tumorRadius);
-                    gradient.addColorStop(0, 'rgba(255, 100, 0, 0.8)');
-                    gradient.addColorStop(0.5, 'rgba(255, 50, 0, 0.6)');
-                    gradient.addColorStop(1, 'rgba(200, 0, 0, 0.3)');
+                    gradient.addColorStop(0, 'rgba(255, 120, 0, 0.9)');
+                    gradient.addColorStop(0.4, 'rgba(255, 80, 0, 0.7)');
+                    gradient.addColorStop(0.7, 'rgba(255, 40, 0, 0.5)');
+                    gradient.addColorStop(1, 'rgba(200, 0, 0, 0.2)');
 
                     ctx.fillStyle = gradient;
                     ctx.beginPath();
                     ctx.arc(tumorX, tumorY, tumorRadius, 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Add glow effect
+                    ctx.strokeStyle = 'rgba(255, 100, 0, 0.6)';
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = 'rgba(255, 100, 0, 0.8)';
+                    ctx.shadowBlur = 20;
+                    ctx.beginPath();
+                    ctx.arc(tumorX, tumorY, tumorRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
                 }
 
+                // Draw nodes on top
                 nodes.forEach(node => {
+                    // Node glow
                     ctx.fillStyle = node.color;
                     ctx.shadowColor = node.color;
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = 15;
                     ctx.beginPath();
-                    ctx.arc(node.x, node.y, 5, 0, Math.PI * 2);
+                    ctx.arc(node.x, node.y, 6, 0, Math.PI * 2);
                     ctx.fill();
+                    
+                    // Node core
                     ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
                 });
             };
 
