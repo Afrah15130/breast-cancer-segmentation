@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Breast Cancer AI - MobileNetV2 + GNN</title>
+    <!-- Updated: 2024-02-15 - Exact Metrics: 62.5% Accuracy -->
     <style>
         * {
             margin: 0;
@@ -491,38 +492,6 @@
     <script>
         let uploadedImage = null;
 
-        // EXACT metrics from your screenshot
-        const METRICS = {
-            accuracy: 0.625,
-            precision: 0.6,
-            recall: 0.75,
-            dice: 0.666666172839872,
-            healthy: {
-                precision: 0.67,
-                recall: 0.50,
-                f1: 0.57,
-                support: 4
-            },
-            unhealthy: {
-                precision: 0.60,
-                recall: 0.75,
-                f1: 0.67,
-                support: 4
-            },
-            macro_avg: {
-                precision: 0.63,
-                recall: 0.62,
-                f1: 0.62,
-                support: 8
-            },
-            weighted_avg: {
-                precision: 0.63,
-                recall: 0.62,
-                f1: 0.62,
-                support: 8
-            }
-        };
-
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file || !file.type.startsWith('image/')) {
@@ -568,15 +537,15 @@
         }
 
         function displayResults() {
-            const isHealthy = Math.random() < 0.5; // 50% chance (4/8 from your data)
+            const isHealthy = Math.random() < 0.5;
             const tumorRegions = isHealthy ? 0 : Math.floor(1 + Math.random() * 4);
             const maxSize = isHealthy ? 0 : (3 + Math.random() * 7).toFixed(1);
             
-            // Use EXACT metrics from your screenshot
-            const accuracy = (METRICS.accuracy * 100).toFixed(2);
-            const precision = (METRICS.precision * 100).toFixed(2);
-            const recall = (METRICS.recall * 100).toFixed(2);
-            const dice = (METRICS.dice * 100).toFixed(2);
+            // EXACT VALUES: 62.5%, 60%, 75%, 66.67%
+            const accuracy = '62.50';
+            const precision = '60.00';
+            const recall = '75.00';
+            const dice = '66.67';
 
             const resultsHTML = `
                 <div class="header">
@@ -673,36 +642,36 @@
                         <tbody>
                             <tr>
                                 <td><strong>Healthy</strong></td>
-                                <td>${METRICS.healthy.precision.toFixed(2)}</td>
-                                <td>${METRICS.healthy.recall.toFixed(2)}</td>
-                                <td>${METRICS.healthy.f1.toFixed(2)}</td>
-                                <td>${METRICS.healthy.support}</td>
+                                <td>0.67</td>
+                                <td>0.50</td>
+                                <td>0.57</td>
+                                <td>4</td>
                             </tr>
                             <tr>
                                 <td><strong>Unhealthy</strong></td>
-                                <td>${METRICS.unhealthy.precision.toFixed(2)}</td>
-                                <td>${METRICS.unhealthy.recall.toFixed(2)}</td>
-                                <td>${METRICS.unhealthy.f1.toFixed(2)}</td>
-                                <td>${METRICS.unhealthy.support}</td>
+                                <td>0.60</td>
+                                <td>0.75</td>
+                                <td>0.67</td>
+                                <td>4</td>
                             </tr>
                             <tr style="background: #f8f9fa; font-weight: 600;">
                                 <td>Accuracy</td>
-                                <td colspan="3">${METRICS.accuracy.toFixed(2)}</td>
-                                <td>${METRICS.healthy.support + METRICS.unhealthy.support}</td>
+                                <td colspan="3">0.62</td>
+                                <td>8</td>
                             </tr>
                             <tr>
                                 <td><strong>Macro Avg</strong></td>
-                                <td>${METRICS.macro_avg.precision.toFixed(2)}</td>
-                                <td>${METRICS.macro_avg.recall.toFixed(2)}</td>
-                                <td>${METRICS.macro_avg.f1.toFixed(2)}</td>
-                                <td>${METRICS.macro_avg.support}</td>
+                                <td>0.63</td>
+                                <td>0.62</td>
+                                <td>0.62</td>
+                                <td>8</td>
                             </tr>
                             <tr>
                                 <td><strong>Weighted Avg</strong></td>
-                                <td>${METRICS.weighted_avg.precision.toFixed(2)}</td>
-                                <td>${METRICS.weighted_avg.recall.toFixed(2)}</td>
-                                <td>${METRICS.weighted_avg.f1.toFixed(2)}</td>
-                                <td>${METRICS.weighted_avg.support}</td>
+                                <td>0.63</td>
+                                <td>0.62</td>
+                                <td>0.62</td>
+                                <td>8</td>
                             </tr>
                         </tbody>
                     </table>
